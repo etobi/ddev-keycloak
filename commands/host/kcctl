@@ -30,9 +30,10 @@ import)
     ;;
 
 export)
-    REALM=""
+    # Separate arguments for kc.sh, empty if all realms are exported
+    REALM_ARGS=()
     if [ "$REALM_NAME" != "" ]; then
-        REALM="--realm $REALM_NAME"
+        REALM_ARGS=(--realm "$REALM_NAME")
     fi
 
     if [ "$REALM_NAME" = "master" ]; then
@@ -41,8 +42,10 @@ export)
     fi
 
     export_data="$DDEV_APPROOT/.ddev/keycloak/import"
-    docker exec -u 0 -i "$CONTAINER_NAME" sh -c "rm -Rf /opt/keycloak/data/import/$REALM*"
-    ddev exec -s keycloak /opt/keycloak/bin/kc.sh export --users same_file "$REALM" --dir /opt/keycloak/data/import
+    # Remove previously exported files of the realm (all files if no realm is given)
+    docker exec -u 0 -i "$CONTAINER_NAME" sh -c "rm -Rf /opt/keycloak/data/import/${REALM_NAME}*"
+    # "${REALM_ARGS[@]+...}" keeps an empty array working with "set -u" in bash < 4.4 (macOS)
+    ddev exec -s keycloak /opt/keycloak/bin/kc.sh export --users same_file ${REALM_ARGS[@]+"${REALM_ARGS[@]}"} --dir /opt/keycloak/data/import
     docker exec -u 0 -i "$CONTAINER_NAME" sh -c 'rm -f /opt/keycloak/data/import/master-*'
     docker cp -q "$CONTAINER_NAME:/opt/keycloak/data/import/." "$export_data/"
     restart
