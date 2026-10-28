@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 #ddev-generated
 
-## Description: Create and destroy solr cores and configsets
-## Usage: kcctl <realm>
-## Example: ddev kcctl
+## Description: Import, export or delete the Keycloak configuration (realms and users)
+## Usage: kcctl import|export [realm]|delete|--help
+## Example: "ddev kcctl import" or "ddev kcctl export ddev" or "ddev kcctl delete"
 
 CONTAINER_NAME=ddev-"$DDEV_SITENAME"-keycloak
 CONTAINER_NAME_DB=ddev-"$DDEV_SITENAME"-keycloak-database
 
 set -eu -o pipefail
 
-CMD=$1
+CMD="${1:---help}"
 REALM_NAME="${2:-}"
 
 function restart() {
@@ -61,17 +61,20 @@ delete)
     echo "——————————————"
     echo -e "\033[1mImport\033[0m"
     echo "—————"
-    echo "Push config to keycloak and import it"
+    echo "Copy .ddev/keycloak/import (<realm>-realm.json, <realm>-users-<n>.json) to Keycloak and restart it."
+    echo "Realms are only imported if they do not exist yet, use 'delete' first to re-import an existing realm."
     echo "👉 ddev kcctl import"
     echo ""
-    echo -e "\033[1mImport\033[0m"
+    echo -e "\033[1mExport\033[0m"
     echo "—————"
-    echo "Export current config (realms and users) to .ddev/keycloak/import"
-    echo "👉 ddev kcctl export <realm> - Exports all if no realm defined"
+    echo "Export the current configuration (realms and users) to .ddev/keycloak/import and restart Keycloak."
+    echo "Exports all realms except 'master' if no realm is given."
+    echo "👉 ddev kcctl export [realm]"
     echo ""
-    echo -e "\033[1mWipe\033[0m"
+    echo -e "\033[1mDelete\033[0m"
     echo "—————"
-    echo "Delete all realms and users"
+    echo "Delete the Keycloak database (all realms incl. 'master' and all users) and the imported files"
+    echo "in the container, then restart Keycloak. Changes made only in Keycloak are lost."
     echo "👉 ddev kcctl delete"
     ;;
 esac
